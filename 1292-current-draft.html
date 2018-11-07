@@ -1228,9 +1228,9 @@ Possible extra rowspan handling
     }
   </style>
   <meta content="Bikeshed version e9290f0f6bc01459c8b7bdfa2bb91f6985fc5c67" name="generator">
-  <link href="https://htmlpreview.github.io/?https://github.com/mattcalabrese/proposal-cpf/p1292r0.html" rel="canonical">
+  <link href="https://htmlpreview.github.io/?https://github.com/mattcalabrese/proposal-cpf/master/p1292r0.html" rel="canonical">
   <link href="https://isocpp.org/favicon.ico" rel="icon">
-  <meta content="f2a4d4d901573e2cc1b05c018af56a9fffc54c0a" name="document-revision">
+  <meta content="d33a3b47cbcb322803ae32cd61fb8ac726cbd9da" name="document-revision">
 <style>/* style-md-lists */
 
 /* This is a weird hack for me not yet following the commonmark spec
@@ -1440,11 +1440,11 @@ pre .property::before, pre .property::after {
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">D1292R1<br>Customization Point Functions</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="subtitle"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2018-10-09">2018-10-09</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="subtitle"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2018-11-03">2018-11-03</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
-     <dd><a class="u-url" href="https://htmlpreview.github.io/?https://github.com/mattcalabrese/proposal-cpf/p1292r0.html">https://htmlpreview.github.io/?https://github.com/mattcalabrese/proposal-cpf/p1292r0.html</a>
+     <dd><a class="u-url" href="https://htmlpreview.github.io/?https://github.com/mattcalabrese/proposal-cpf/master/p1292r0.html">https://htmlpreview.github.io/?https://github.com/mattcalabrese/proposal-cpf/master/p1292r0.html</a>
      <dt>Author:
      <dd>
       <dd class="editor p-author h-card vcard"><a class="p-name fn u-email email" href="mailto:metaprogrammingtheworld@gmail.com">Matt Calabrese</a>
@@ -1469,35 +1469,52 @@ pre .property::before, pre .property::after {
   <nav data-fill-with="table-of-contents" id="toc">
    <h2 class="no-num no-toc no-ref" id="contents">Table of Contents</h2>
    <ol class="toc" role="directory">
+    <li><a href="#Revisions"><span class="secno">1</span> <span class="content">Revision History</span></a>
     <li>
-     <a href="#Introduction"><span class="secno">1</span> <span class="content">Introduction</span></a>
+     <a href="#Introduction"><span class="secno">2</span> <span class="content">Introduction</span></a>
      <ol class="toc">
-      <li><a href="#Example"><span class="secno">1.1</span> <span class="content">Example</span></a>
-      <li><a href="#Motivation"><span class="secno">1.2</span> <span class="content">Motivation</span></a>
+      <li><a href="#Example"><span class="secno">2.1</span> <span class="content">Example</span></a>
+      <li><a href="#Motivation"><span class="secno">2.2</span> <span class="content">Motivation</span></a>
      </ol>
     <li>
-     <a href="#CPF"><span class="secno">2</span> <span class="content">Customization Point Functions</span></a>
+     <a href="#CPF"><span class="secno">3</span> <span class="content">Customization Point Functions</span></a>
      <ol class="toc">
-      <li><a href="#CPF-decl"><span class="secno">2.1</span> <span class="content">Declaring a Customization Point Function</span></a>
+      <li><a href="#CPF-decl"><span class="secno">3.1</span> <span class="content">Declaring a Customization Point Function</span></a>
+      <li><a href="#CPF-operators"><span class="secno">3.2</span> <span class="content">Customization Point Function Operators</span></a>
       <li>
-       <a href="#CPF-override"><span class="secno">2.2</span> <span class="content">Overriding Customization Point Functions</span></a>
+       <a href="#CPF-override"><span class="secno">3.3</span> <span class="content">Overriding Customization Point Functions</span></a>
        <ol class="toc">
-        <li><a href="#CPF-override-semantics"><span class="secno">2.2.1</span> <span class="content">Semantics of Customization Point Functions</span></a>
+        <li><a href="#CPF-override-semantics"><span class="secno">3.3.1</span> <span class="content">Semantics of Customization Point Functions</span></a>
        </ol>
-      <li><a href="#CPF-named-override"><span class="secno">2.3</span> <span class="content">Named Customization Point Function Overrides</span></a>
-      <li><a href="#CPF-friend"><span class="secno">2.4</span> <span class="content">Overrides as Friend Functions</span></a>
-      <li><a href="#CPF-objects"><span class="secno">2.5</span> <span class="content">Customization Point Functions as Objects</span></a>
-      <li><a href="#CPF-pure-virtual"><span class="secno">2.6</span> <span class="content">"Pure Virtual" Customization Point Functions</span></a>
-      <li><a href="#CPF-final"><span class="secno">2.7</span> <span class="content">Final Customization Point Functions</span></a>
-      <li><a href="#CPF-hierarchical-overrides"><span class="secno">2.8</span> <span class="content">Hierarchical Customization Point Functions</span></a>
+      <li><a href="#CPF-explicit-return"><span class="secno">3.4</span> <span class="content">Customization Point Functions with Explicit Return Types</span></a>
+      <li><a href="#CPF-deduced-return"><span class="secno">3.5</span> <span class="content">Customization Point Functions and Deduced Return Types</span></a>
+      <li><a href="#CPF-named-override"><span class="secno">3.6</span> <span class="content">Named Customization Point Function Overrides</span></a>
+      <li><a href="#CPF-friend"><span class="secno">3.7</span> <span class="content">Overrides as Friend Functions</span></a>
+      <li><a href="#CPF-objects"><span class="secno">3.8</span> <span class="content">Customization Point Functions as Objects</span></a>
+      <li><a href="#CPF-pure-virtual"><span class="secno">3.9</span> <span class="content">"Pure Virtual" Customization Point Functions</span></a>
+      <li><a href="#CPF-final"><span class="secno">3.10</span> <span class="content">Final Customization Point Functions</span></a>
+      <li><a href="#CPF-hierarchical-overrides"><span class="secno">3.11</span> <span class="content">Hierarchical Customization Point Functions</span></a>
      </ol>
-    <li><a href="#Polls"><span class="secno">3</span> <span class="content">Suggested Polls</span></a>
-    <li><a href="#References"><span class="secno">4</span> <span class="content">References</span></a>
+    <li><a href="#Polls"><span class="secno">4</span> <span class="content">Suggested Polls</span></a>
+    <li><a href="#Acknowledgments"><span class="secno">5</span> <span class="content">Acknowledgments</span></a>
+    <li><a href="#References"><span class="secno">6</span> <span class="content">References</span></a>
    </ol>
   </nav>
   <main>
-   <h2 class="heading settled" data-level="1" id="Introduction"><span class="secno">1. </span><span class="content">Introduction</span><a class="self-link" href="#Introduction"></a></h2>
-   <h3 class="heading settled" data-level="1.1" id="Example"><span class="secno">1.1. </span><span class="content">Example</span><a class="self-link" href="#Example"></a></h3>
+   <h2 class="heading settled" data-level="1" id="Revisions"><span class="secno">1. </span><span class="content">Revision History</span><a class="self-link" href="#Revisions"></a></h2>
+   <p>P1292R1</p>
+   <ul>
+    <li data-md>
+     <p>Add section on customization point functions that are operator overloads</p>
+    <li data-md>
+     <p>Add section on customization point functions with explicit return types</p>
+    <li data-md>
+     <p>Add section on customization point functions with deduced return types</p>
+    <li data-md>
+     <p>Elaborate section on friend overrides</p>
+   </ul>
+   <h2 class="heading settled" data-level="2" id="Introduction"><span class="secno">2. </span><span class="content">Introduction</span><a class="self-link" href="#Introduction"></a></h2>
+   <h3 class="heading settled" data-level="2.1" id="Example"><span class="secno">2.1. </span><span class="content">Example</span><a class="self-link" href="#Example"></a></h3>
    <p>Before going into details, below is a simple example of the core of what is
 proposed -- a "virtual", but statically-dispatched, non-member function that
 declares a logical entry point for user-customization. Users may explicitly
@@ -1515,7 +1532,7 @@ customized implementation whenever appropriate.</p>
 <c- c1>// A user’s override (may appear in their own namespace)</c->
 <c- b>void</c-> <c- n>swap</c-><c- p>(</c-> <c- n>foo</c-><c- o>&amp;</c-> <c- n>lhs</c-><c- p>,</c-> <c- n>foo</c-><c- o>&amp;</c-> <c- n>rhs</c-> <c- p>)</c-> <c- k>override</c-> <c- o>:</c-> <c- n>std</c-><c- o>::</c-><c- n>swap</c-> <c- p>{</c-> <c- d>/*...*/</c-> <c- p>}</c->
 </pre>
-   <h3 class="heading settled" data-level="1.2" id="Motivation"><span class="secno">1.2. </span><span class="content">Motivation</span><a class="self-link" href="#Motivation"></a></h3>
+   <h3 class="heading settled" data-level="2.2" id="Motivation"><span class="secno">2.2. </span><span class="content">Motivation</span><a class="self-link" href="#Motivation"></a></h3>
    <p>Many C++ libraries introduce simple, named, single-function customization points
 through which generic code may interface with user-defined operations. Two
 common techniques for implementing these customization points are nested members
@@ -1559,14 +1576,14 @@ produce a compile-time error
    <p>This proposal attempts to make function-kind customization points a directly
 supported part of the language, with a simpler set of rules than existing
 approaches that most programmers would be able to fully understand.</p>
-   <h2 class="heading settled" data-level="2" id="CPF"><span class="secno">2. </span><span class="content">Customization Point Functions</span><a class="self-link" href="#CPF"></a></h2>
+   <h2 class="heading settled" data-level="3" id="CPF"><span class="secno">3. </span><span class="content">Customization Point Functions</span><a class="self-link" href="#CPF"></a></h2>
    <p>Customization point functions are the proposed alternative to the subset of
-customization points that developers currently use ADL for.</p>
-   <h3 class="heading settled" data-level="2.1" id="CPF-decl"><span class="secno">2.1. </span><span class="content">Declaring a Customization Point Function</span><a class="self-link" href="#CPF-decl"></a></h3>
+customization points for which developers currently use ADL.</p>
+   <h3 class="heading settled" data-level="3.1" id="CPF-decl"><span class="secno">3.1. </span><span class="content">Declaring a Customization Point Function</span><a class="self-link" href="#CPF-decl"></a></h3>
    <p>A customization point function may be declared at namespace scope just as any
 other function template, but with a preceding <code class="highlight"><c- k>virtual</c-></code> keyword.
-Customization point functions may be constrained just as any other function
-template may be constrained.</p>
+Customization point functions may specify constraints in the same manner as
+other function templates specify constraints.</p>
 <pre class="highlight"><c- k>template</c-><c- o>&lt;</c-> <c- k>class</c-> <c- nc>T</c-> <c- o>></c->
 <c- k>virtual</c-> <c- k>constexpr</c-> <c- b>void</c-> <c- n>swap</c-><c- p>(</c-> <c- n>T</c-><c- o>&amp;</c-> <c- n>lhs</c-><c- p>,</c-> <c- n>T</c-><c- o>&amp;</c-> <c- n>rhs</c-> <c- p>)</c->
   <c- k>noexcept</c-><c- p>(</c->    <c- n>std</c-><c- o>::</c-><c- n>is_nothrow_move_constructible_v</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c->
@@ -1582,18 +1599,21 @@ template may be constrained.</p>
    <p>Note that the usage of the keyword <code class="highlight"><c- k>virtual</c-></code> here is to indicate the
 fact that the function may be overridden elsewhere in code in a way that is
 dependent on the function’s arguments. However, unlike traditional <code class="highlight"><c- k>virtual</c-></code>, this is not achieved through dynamic dispatch. Whether or
-not this particualy syntax is a reasonable choice should be decided by committee
+not this particular syntax is a reasonable choice should be decided by committee
 if the overall functionality is considered useful.</p>
-   <h3 class="heading settled" data-level="2.2" id="CPF-override"><span class="secno">2.2. </span><span class="content">Overriding Customization Point Functions</span><a class="self-link" href="#CPF-override"></a></h3>
+   <h3 class="heading settled" data-level="3.2" id="CPF-operators"><span class="secno">3.2. </span><span class="content">Customization Point Function Operators</span><a class="self-link" href="#CPF-operators"></a></h3>
+   <p>Customization point functions that are declared as operators are not currently
+proposed as a part of this paper and should be ill-formed.</p>
+   <h3 class="heading settled" data-level="3.3" id="CPF-override"><span class="secno">3.3. </span><span class="content">Overriding Customization Point Functions</span><a class="self-link" href="#CPF-override"></a></h3>
    <p>A customization point function’s primary use is as a non-member function that
 may be overridden. Unlike with normal function overloading, an override of a
 customization point function must be explicitly declared as an override of that
 specific customization point function. There are multiple ways in which a
 customization point function’s override may be declared, but the simplest is to
-write the function type including the <code class="highlight"><c- k>override</c-></code> specifier, followed
-by a <code class="highlight"><c- o>:</c-></code> and the name of the customization point function that is to
-be overridden. The override declaration is also a definition if a function body
-immediately follows the name of the customization point function.</p>
+write the function declaration excluding the function name, but including the <code class="highlight"><c- k>override</c-></code> specifier, followed by a <code class="highlight"><c- o>:</c-></code> and the name of
+the customization point function that is to be overridden. The override
+declaration is also a definition if a function body immediately follows the name
+of the overridden customization point function.</p>
 <pre class="highlight"><c- k>namespace</c-> <c- n>std</c-> <c- p>{</c->
 
 <c- c1>// A customization point function</c->
@@ -1614,15 +1634,8 @@ immediately follows the name of the customization point function.</p>
 </pre>
    <p>Informally, an override of a customization point function must be more
 specialized or more constrained than the customization point function that it
-overrides, but the return type of an override may differ if the override’s
-return type is implicitly convertible to the customization point function’s
-return type, or if the customization point’s return type is <code class="highlight"><c- b>void</c-></code>.
-Calls made to the customization point function force any such conversions to
-take place before returning to the caller.</p>
-   <p>Formal details surrounding these requirements and any alterations will be
-explored in a future revision if the rest of the proposal is positively
-received.</p>
-   <h4 class="heading settled" data-level="2.2.1" id="CPF-override-semantics"><span class="secno">2.2.1. </span><span class="content">Semantics of Customization Point Functions</span><a class="self-link" href="#CPF-override-semantics"></a></h4>
+overrides.</p>
+   <h4 class="heading settled" data-level="3.3.1" id="CPF-override-semantics"><span class="secno">3.3.1. </span><span class="content">Semantics of Customization Point Functions</span><a class="self-link" href="#CPF-override-semantics"></a></h4>
    <p>When code attempts to call a customization point function, it is first resolved
 as if there were some imaginary function or function template with that
 declaration. If a call to such a function would be valid, then it and all of the
@@ -1630,7 +1643,25 @@ direct overrides of that customization point function are treated as though they
 were all functions with the same name in some namespace with no other members.
 If a qualified call to a function of that name in that namespace would succeed,
 then the corresponding function is what is called in the actual program.</p>
-   <h3 class="heading settled" data-level="2.3" id="CPF-named-override"><span class="secno">2.3. </span><span class="content">Named Customization Point Function Overrides</span><a class="self-link" href="#CPF-named-override"></a></h3>
+   <h3 class="heading settled" data-level="3.4" id="CPF-explicit-return"><span class="secno">3.4. </span><span class="content">Customization Point Functions with Explicit Return Types</span><a class="self-link" href="#CPF-explicit-return"></a></h3>
+   <p>If a customization point function has a return type that is not deduced, then
+any override of that function must either have the same return type or a return
+type that is implicitly convertible to the customization point function’s
+return type. Calls made through the customization point function force any such
+conversions to take place before returning to the caller.</p>
+   <h3 class="heading settled" data-level="3.5" id="CPF-deduced-return"><span class="secno">3.5. </span><span class="content">Customization Point Functions and Deduced Return Types</span><a class="self-link" href="#CPF-deduced-return"></a></h3>
+   <p>A customization point function may be declared with a deduced or constrained
+return type[7]. For example:</p>
+<pre class="highlight"><c- k>template</c-><c- o>&lt;</c-> <c- k>class</c-> <c- nc>T</c-> <c- o>></c->
+<c- k>virtual</c-> <c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>View</c-> <c- k>auto</c-> <c- n>view_of</c-><c- p>(</c-> <c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>object</c-> <c- p>);</c->
+</pre>
+   <p>In the case of a deduced or constrained return type, any override must have
+either a non-deduced return type that meets any constraints that are specified,
+otherwise it must have a deduced return type that is at least as constrained as
+the customization point function that it overrides. If any declaration of a
+customization point function has a deduced return type, then _all_ declarations
+of that customization point function must also have a deduced return type.</p>
+   <h3 class="heading settled" data-level="3.6" id="CPF-named-override"><span class="secno">3.6. </span><span class="content">Named Customization Point Function Overrides</span><a class="self-link" href="#CPF-named-override"></a></h3>
    <p>An override of a customization point function may optionally be given a name. To
 specify a name for a customization point function override, the declaration is
 the same as a normal function declaration, except that it includes the override
@@ -1665,25 +1696,38 @@ a specific <code class="highlight"><c- k>virtual</c-></code> function by qualify
 name.</p>
    <p>A named override is itself considered to also be a customization point function.
 Implications of this are described later on in this paper.</p>
-   <h3 class="heading settled" data-level="2.4" id="CPF-friend"><span class="secno">2.4. </span><span class="content">Overrides as Friend Functions</span><a class="self-link" href="#CPF-friend"></a></h3>
-   <p>In order to limit the amount of overrides that are looked up per call, it is
-suggested that a customization point function may be able to be overridden in
-the body of a class definition, in a similar manner to how an inline <code class="highlight"><c- k>friend</c-></code> function definition behaves with respect to ADL. The details
-of this are to be explored in a revision of this paper if the overall idea is
-considered useful.</p>
-   <h3 class="heading settled" data-level="2.5" id="CPF-objects"><span class="secno">2.5. </span><span class="content">Customization Point Functions as Objects</span><a class="self-link" href="#CPF-objects"></a></h3>
+   <h3 class="heading settled" data-level="3.7" id="CPF-friend"><span class="secno">3.7. </span><span class="content">Overrides as Friend Functions</span><a class="self-link" href="#CPF-friend"></a></h3>
+   <p>In order to limit the amount of overrides that are looked up per call to a
+customization point, a customization point function may be overridden in the
+body of a class definition as a friend function definition. This capability
+affects lookup of overrides in manner that is similar to lookup of functions
+in associated classes when performing ADL, except that the set of associated
+classes that are considered when performing lookup in order to discover an
+override is intentionally a smaller subset. The motivation for minimizing the
+set of associated classes to be considered is to avoid the instantiation of
+types that may be unable to be completed at the point that the function is
+invoked.</p>
+   <p>If an argument to a call to a customization point function is a class type
+(including unions), the associated classes in which to discover overrides are:
+the class itself; the class of which it is a member, if any; and its direct and
+indirect base classes.</p>
+   <p>Otherwise, if an argument to a customization point function is an enumeration,
+the associated classes in which to discover overrides are: the class of which it
+is a member, if any.</p>
+   <p>Otherwise, there are no associated classes in which to discover overrides.</p>
+   <h3 class="heading settled" data-level="3.8" id="CPF-objects"><span class="secno">3.8. </span><span class="content">Customization Point Functions as Objects</span><a class="self-link" href="#CPF-objects"></a></h3>
    <p>Despite the name, a customization point function is expected to behave more
-similar to a function object than to a function or function template. The
-rationale for this is to allow such a function to be able to be easily passed
-around to higher-order functions as a single entity. It also more accurately
-reflects intended behavior with respect to prohibition of "implicit" overloading
-and name lookup. A customization point function *cannot* be overloaded, but
-rather, it may only be overridden. Further, a customization point function is to
-not be found by ADL, and if when attempting to call a function by name a
-customization point function of that name is found by normal name lookup prior
-to ADL, then ADL is inhibited. The combination of these rules removes many of
-the subtleties of invoking customization points correctly.</p>
-   <h3 class="heading settled" data-level="2.6" id="CPF-pure-virtual"><span class="secno">2.6. </span><span class="content">"Pure Virtual" Customization Point Functions</span><a class="self-link" href="#CPF-pure-virtual"></a></h3>
+like a function object than a function or function template. The rationale for
+this is to allow such a function to be able to be easily passed around to
+higher-order functions as a single entity. It also more accurately reflects
+intended behavior with respect to prohibition of "implicit" overloading and name
+lookup. A customization point function *cannot* be overloaded, but rather, it
+may only be overridden. Further, a customization point function is to not be
+found by ADL, and if when attempting to call a function by name a customization
+point function of that name is found by normal name lookup prior to ADL, then
+ADL is inhibited. The combination of these rules removes many of the subtleties
+of invoking customization points correctly.</p>
+   <h3 class="heading settled" data-level="3.9" id="CPF-pure-virtual"><span class="secno">3.9. </span><span class="content">"Pure Virtual" Customization Point Functions</span><a class="self-link" href="#CPF-pure-virtual"></a></h3>
    <p>Similar to <code class="highlight"><c- k>virtual</c-></code> functions, a customization point function may be
 declared pure virtual (although in contrast, a pure virtual customization point
 function may *not* have a definition). When attempting to call a pure virtual
@@ -1692,7 +1736,7 @@ that are passed, then overload resolution fails.</p>
 <pre class="highlight"><c- k>template</c-><c- o>&lt;</c-> <c- k>class</c-> <c- nc>T</c-> <c- o>></c->
 <c- k>virtual</c-> <c- b>void</c-> <c- n>draw</c-><c- p>(</c-> <c- n>context</c-><c- o>&amp;</c-> <c- n>cont</c-><c- p>,</c-> <c- n>T</c-> <c- k>const</c-><c- o>&amp;</c-> <c- n>obj</c-> <c- p>)</c-> <c- o>=</c-> <c- mi>0</c-><c- p>;</c->
 </pre>
-   <h3 class="heading settled" data-level="2.7" id="CPF-final"><span class="secno">2.7. </span><span class="content">Final Customization Point Functions</span><a class="self-link" href="#CPF-final"></a></h3>
+   <h3 class="heading settled" data-level="3.10" id="CPF-final"><span class="secno">3.10. </span><span class="content">Final Customization Point Functions</span><a class="self-link" href="#CPF-final"></a></h3>
    <p>A customization point function may be declared <code class="highlight"><c- k>final</c-></code>, in which case
 that function may not be overridden. Programs that attempt to declare an
 override for such a function are ill-formed. Though it may seem contradictory in
@@ -1703,16 +1747,17 @@ such functions to higher-order algorithms. This ability is also useful as a
 means to counteract the understandable advocation by certain generic library
 authors to avoid namespace-scope functions entirely in favor of global function
 objects.[6]</p>
-   <p>A <code class="highlight"><c- k>final</c-></code> customization point object may include the <code class="highlight"><c- k>virtual</c-></code> specifier, but it is not required to do so.</p>
+   <p>A <code class="highlight"><c- k>final</c-></code> customization point functions may include the <code class="highlight"><c- k>virtual</c-></code> specifier, but it is not required to do so.</p>
 <pre class="highlight"><c- k>template</c-><c- o>&lt;</c-> <c- k>class</c-> <c- nc>T</c-> <c- o>></c->
 <c- n>T</c-> <c- n>square</c-><c- p>(</c-> <c- n>T</c-> <c- k>const</c-><c- o>&amp;</c-> <c- n>arg</c-> <c- p>)</c-> <c- k>final</c->
 <c- p>{</c->
   <c- k>return</c-> <c- n>arg</c-> <c- o>*</c-> <c- n>arg</c-><c- p>;</c->
 <c- p>}</c->
 
+<c- c1>// Assume the following statement is inside of a function.</c->
 <c- n>std</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c-> <c- n>range1</c-><c- p>,</c-> <c- n>out_it</c-><c- p>,</c-> <c- n>square</c-> <c- p>);</c->
 </pre>
-   <h3 class="heading settled" data-level="2.8" id="CPF-hierarchical-overrides"><span class="secno">2.8. </span><span class="content">Hierarchical Customization Point Functions</span><a class="self-link" href="#CPF-hierarchical-overrides"></a></h3>
+   <h3 class="heading settled" data-level="3.11" id="CPF-hierarchical-overrides"><span class="secno">3.11. </span><span class="content">Hierarchical Customization Point Functions</span><a class="self-link" href="#CPF-hierarchical-overrides"></a></h3>
    <p>As mentioned earlier, a named customization point function override is itself
 considered to be its own customization point function. This means that such an
 override may be explicitly overridden by name (it may also be pure and it may be <code class="highlight"><c- k>final</c-></code>). This allows customization point functions to naturally form
@@ -1759,18 +1804,21 @@ this. As well, unlike with a nested <code class="highlight"><c- k>if</c-> <c- k>
 hierarchical overrides naturally form an open set of branches that is exposed to
 the user, and for which they may further customize.</p>
    <p>A named customization point function override that is intended to be <code class="highlight"><c- k>final</c-></code> must use the keyword <code class="highlight"><c- k>final</c-></code> instead of <code class="highlight"><c- k>override</c-></code> in its declaration.</p>
-   <h2 class="heading settled" data-level="3" id="Polls"><span class="secno">3. </span><span class="content">Suggested Polls</span><a class="self-link" href="#Polls"></a></h2>
+   <h2 class="heading settled" data-level="4" id="Polls"><span class="secno">4. </span><span class="content">Suggested Polls</span><a class="self-link" href="#Polls"></a></h2>
    <p>Should this proposal be elaborated on in a future revision?</p>
    <p>Are the motivating problems worth solving at the language level at all?</p>
    <p>Is the functionality of <code class="highlight"><c- k>final</c-></code> non-member functions worth proposing
 separately?</p>
-   <h2 class="heading settled" data-level="4" id="References"><span class="secno">4. </span><span class="content">References</span><a class="self-link" href="#References"></a></h2>
+   <h2 class="heading settled" data-level="5" id="Acknowledgments"><span class="secno">5. </span><span class="content">Acknowledgments</span><a class="self-link" href="#Acknowledgments"></a></h2>
+   <p>Thanks to Casey Carter and Eric Niebler for their feedback on this proposal.</p>
+   <h2 class="heading settled" data-level="6" id="References"><span class="secno">6. </span><span class="content">References</span><a class="self-link" href="#References"></a></h2>
    <p>[1]: Matt Kulukundis: "Tip of the Week #152: AbslHashValue and You" <a href="https://abseil.io/tips/152">https://abseil.io/tips/152</a></p>
    <p>[2]: Eric Niebler: "Customization Point Design in C++11 and Beyond" <a href="http://ericniebler.com/2014/10/21/customization-point-design-in-c11-and-beyond/">http://ericniebler.com/2014/10/21/customization-point-design-in-c11-and-beyond/</a></p>
    <p>[3]: Stack Overflow Search for ADL <a href="https://stackoverflow.com/search?q=ADL">https://stackoverflow.com/search?q=ADL</a></p>
    <p>[4]: N4762 "Working Draft, Standard for Programming Language C++" [customization.point.object] <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4762.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4762.pdf</a></p>
-   <p>[5]: Jens Weller "An Interview with Sean Parent" <a href="https://www.meetingcpp.com/blog/items/interview-with-sean-parent.html">https://www.meetingcpp.com/blog/items/interview-with-sean-parent.html</a></p>
+   <p>[5]: Jens Weller: "An Interview with Sean Parent" <a href="https://www.meetingcpp.com/blog/items/interview-with-sean-parent.html">https://www.meetingcpp.com/blog/items/interview-with-sean-parent.html</a></p>
    <p>[6]: Eric Niebler: "C++11 Library Design" <a href="https://github.com/boostcon/cppnow_presentations_2014/blob/master/files/cxx11-library-design.pdf">https://github.com/boostcon/cppnow_presentations_2014/blob/master/files/cxx11-library-design.pdf</a></p>
+   <p>[7]: Various Authors: "Yet another approach for constrained declarations" <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1141r1.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1141r1.html</a></p>
   </main>
 <script>
 (function() {
