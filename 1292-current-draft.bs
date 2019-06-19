@@ -12,16 +12,18 @@ Abstract: This paper proposes a new language facility for easily specifying,
     frequently used in generic libraries, such as <code>swap</code> of the
     standard library, and <code>AbslHashValue</code> of Abseil[1]. This proposal
     is intended to target a standard after C++20.
-Date: 2018-11-03
+Date: 2018-06-19
 </pre>
 
 Revision History {#Revisions}
 =============================
 
 P1292R1
-* Add section on customization point functions that are operator overloads
+* Update examples
 * Add section on customization point functions with explicit return types
 * Add section on customization point functions with deduced return types
+* Add section on noexcept
+* Add section on customization point functions that are operator overloads
 * Elaborate section on friend overrides
 
 Introduction {#Introduction}
@@ -40,14 +42,14 @@ customized implementation whenever appropriate.
 <pre highlight="c++">
   namespace std {
   
-  // A customization point named "swap", including a default definition.
+  // A customization point named "swap", with a default definition.
   template&lt; class T &gt;
   virtual void swap( T&amp; lhs, T&amp; rhs ) { /*...*/ }
   
   } // namespace std
 
   // A user's override (may appear in their own namespace)
-  void swap( foo&amp; lhs, foo&amp; rhs ) override : std::swap { /*...*/ }
+  void ( foo&amp; lhs, foo&amp; rhs ) override : std::swap { /*...*/ }
 </pre>
 
 Motivation {#Motivation}
@@ -113,17 +115,8 @@ Customization point functions may specify constraints in the same manner as
 other function templates specify constraints.
 
 <pre highlight="c++">
-  template&lt; class T &gt;
-  virtual constexpr void swap( T&amp; lhs, T&amp; rhs )
-    noexcept(    std::is_nothrow_move_constructible_v&lt;T&gt;
-              && std::is_nothrow_move_assignable_v&lt;T&gt;
-            )
-    requires MoveConstructible&lt;T&gt; && MoveAssignable&lt;T&gt;
-  {
-  	T temp = std::move(lhs);
-  	lhs = std::move(rhs);
-  	rhs = std::move(temp);
-  }
+  template&lt; class T, class U &gt;
+  virtual constexpr void swap( T&amp; lhs, U&amp; rhs ) = 0;
 </pre>
 
 Note that the usage of the keyword <code>virtual</code> here is to indicate the
@@ -131,13 +124,11 @@ fact that the function may be overridden elsewhere in code in a way that is
 dependent on the function's arguments. However, unlike traditional
 <code>virtual</code>, this is not achieved through dynamic dispatch. Whether or
 not this particular syntax is a reasonable choice should be decided by committee
-if the overall functionality is considered useful.
-
-Customization Point Function Operators {#CPF-operators}
--------------------------------------------------------
-
-Customization point functions that are declared as operators are not currently
-proposed as a part of this paper and should be ill-formed.
+if the overall functionality is considered useful. The <code>= 0</code> here
+indicates that there is no default definition for this customization point,
+which is a feature that will be discussed more fully later on in this document.
+In the above example, the customization point function's name, in this case
+<code>swap</code>, is refered to as the customization point function's seed.
 
 Overriding Customization Point Functions {#CPF-override}
 --------------------------------------------------------
@@ -145,20 +136,14 @@ Overriding Customization Point Functions {#CPF-override}
 A customization point function's primary use is as a non-member function that
 may be overridden. Unlike with normal function overloading, an override of a
 customization point function must be explicitly declared as an override of that
-specific customization point function. There are multiple ways in which a
-customization point function's override may be declared, but the simplest is to
-write the function declaration excluding the function name, but including the
-<code>override</code> specifier, followed by a <code>:</code> and the name of
-the customization point function that is to be overridden. The override
-declaration is also a definition if a function body immediately follows the name
-of the overridden customization point function.
+specific customization point function:
 
 <pre highlight="c++">
   namespace std {
 
   // A customization point function
   template&lt; class T &gt;
-  virtual void swap( T& lhs, T& rhs ) { /*default definition*/ }
+  virtual constexpr void swap( T&amp; lhs, T&amp; rhs ) = 0;
 
   } // namespace std
 
@@ -166,26 +151,68 @@ of the overridden customization point function.
   class tensor { /*...*/ };
 
   // A user-defined override for swap
-  void ( tensor& lhs, tensor& rhs ) override
+  void ( tensor&amp; lhs, tensor&amp; rhs ) override
     : std::swap // The customization point function to be overridden
   {
     /*...*/
   }
+
+  int main()
+  {
+    tensor a;
+    tensor b;
+
+    swap( a, b ); // Invokes the overridden swap.
+  }
 </pre>
+
+What's seen above is one way to override a customization point function. The
+developer writes the function declaration excluding the function name, but
+including the <code>override</code> specifier, followed by a <code>:</code> and
+the name of the customization point function that is to be overridden. The
+override declaration is also a definition if a function body immediately follows
+the name of the overridden customization point function.
 
 Informally, an override of a customization point function must be more
 specialized or more constrained than the customization point function that it
-overrides.
+overrides. Whether or not this currently informal requirement is able to be
+statically checked at the point an override is written would depend on certain
+properties of a specific customization point and its override. For now, the
+proposal suggests that this is not checked at the point of definition, but that
+may change in a future revision.
 
 ### Semantics of Customization Point Functions ### {#CPF-override-semantics}
 
-When code attempts to call a customization point function, it is first resolved
-as if there were some imaginary function or function template with that
-declaration. If a call to such a function would be valid, then it and all of the
-direct overrides of that customization point function are treated as though they
-were all functions with the same name in some namespace with no other members.
-If a qualified call to a function of that name in that namespace would succeed,
-then the corresponding function is what is called in the actual program.
+There are a couple of potential models for how invocation dispatching could
+work.
+
+1) Model the dynamic dispatching in a manner that is consistent with CPOs. That
+is to say that a call to the customization point function is equivalent to
+calling a function with the root customization point function's declaration,
+where that function internally forwards its arguments along to a call into some
+overload set (with CPOs, the overloads are found by ADL, but with this proposal
+the overload set consists of all explicit overrides).
+
+2) Alternatively, when code attempts to call a customization point function, we
+first check, via usage pattern, if a call to the seed's declaration would be a
+valid expression. If it is not a valid expression, then overload resolution
+fails. Otherwise, if it is a valid expression, then it and all of the direct
+overrides of that customization point function are treated as though they were
+all functions with the same name in some namespace with no other members. If a
+qualified call to a function of that name in that namespace would succeed, then
+the corresponding function is what is called in the actual program.
+
+The primary difference between these two approaches is that additional argument
+conversions may happen in approach (1), and if the parameter types are object
+types, there may potentially be additional copies. It is also consistent with
+what is done in practice with respect to CPOs. Approach (2) is a bit novel and
+it is unclear if the semantics are reasonable. It is, however, more similiar to
+what happens with a direct usage of a "2-step" ADL-based customization point
+dance.
+
+I lean towards approach (1), though it may be worth implementing and
+experimenting with approach (2) for comparison.
+
 
 Customization Point Functions with Explicit Return Types {#CPF-explicit-return}
 -------------------------------------------------------------------------------
@@ -204,7 +231,7 @@ return type[7]. For example:
 
 <pre highlight="c++">
   template&lt; class T &gt;
-  virtual std::ranges::View auto view_of( T&amp;&amp; object );
+  virtual std::ranges::View auto view_of( T&amp;&amp; object ) = 0;
 </pre>
 
 In the case of a deduced or constrained return type, any override must have
@@ -213,6 +240,21 @@ otherwise it must have a deduced return type that is at least as constrained as
 the customization point function that it overrides. If any declaration of a
 customization point function has a deduced return type, then _all_ declarations
 of that customization point function must also have a deduced return type.
+
+Customization Point Functions and Noexcept {#CPF-noexcept}
+----------------------------------------------------------
+
+If a customization point function is <code>noexcept</code>, then all overrides
+must be specified as <code>noexcept</code>.
+
+If a customization point function is implicitly or explicitly
+<code>noexcept(false)</code>, then an override may be specified as
+<code>noexcept</code>. If the overriding function is <code>noexcept</code> and
+gets picked during overload resolution when making a call via the customization
+point function seed, then the <code>noexcept</code> operator when applied to the
+overall call expression yields <code>true</code> as long as all implicit
+argument forwarding expressions that take place also yield <code>true</code>
+with respect to the <code>noexcept</code> operator.
 
 Named Customization Point Function Overrides {#CPF-named-override}
 ------------------------------------------------------------------
@@ -256,48 +298,40 @@ name.
 A named override is itself considered to also be a customization point function.
 Implications of this are described later on in this paper.
 
-Overrides as Friend Functions {#CPF-friend}
--------------------------------------------
-
-In order to limit the amount of overrides that are looked up per call to a
-customization point, a customization point function may be overridden in the
-body of a class definition as a friend function definition. This capability
-affects lookup of overrides in manner that is similar to lookup of functions
-in associated classes when performing ADL, except that the set of associated
-classes that are considered when performing lookup in order to discover an
-override is intentionally a smaller subset. The motivation for minimizing the
-set of associated classes to be considered is to avoid the instantiation of
-types that may be unable to be completed at the point that the function is
-invoked.
-
-If an argument to a call to a customization point function is a class type
-(including unions), the associated classes in which to discover overrides are:
-the class itself; the class of which it is a member, if any; and its direct and
-indirect base classes.
-
-Otherwise, if an argument to a customization point function is an enumeration,
-the associated classes in which to discover overrides are: the class of which it
-is a member, if any.
-
-Otherwise, there are no associated classes in which to discover overrides.
-
 Customization Point Functions as Objects {#CPF-objects}
 -------------------------------------------------------
 
 Despite the name, a customization point function is expected to behave more
-like a function object than a function or function template. The rationale for
-this is to allow such a function to be able to be easily passed around to
-higher-order functions as a single entity. It also more accurately reflects
-intended behavior with respect to prohibition of "implicit" overloading and name
-lookup. A customization point function *cannot* be overloaded, but rather, it
-may only be overridden. Further, a customization point function is to not be
-found by ADL, and if when attempting to call a function by name a customization
-point function of that name is found by normal name lookup prior to ADL, then
-ADL is inhibited. The combination of these rules removes many of the subtleties
-of invoking customization points correctly.
+like a function object than a function or function template. This is also the
+state-of-the-art in design for customization points in <code>std::ranges</code>
+with the introduction of the Customization Point Object pattern. Use of objects
+there was not incidental, but rather it was intentional due to the desirable
+properties of function objects when compared to functions:
 
-"Pure Virtual" Customization Point Functions {#CPF-pure-virtual}
-----------------------------------------------------------------
+* Objects with a function call operator are *not* found by ADL. This means
+    that average developers do not have to worry about ADL accidentally finding
+    such an object when making an unqualified call.
+
+* If, when attempting to call a function by name, an object of that name is
+    found by normal name lookup prior to ADL, then ADL is inhibited. This means
+    that developers can invoke the objects unqualified (such as if brought in by
+    <code>using</code>), and they will not accidentally trigger ADL.
+
+* The use of objects prevents unintentional overload sets (such as if brought
+    in by <code>using</code>). A customization point function *cannot* be
+    overloaded, but rather, it may only be overridden.
+
+* The use of an object-like model means that such customization points are
+    able to be easily passed around to higher-order functions as a single entity.
+
+* Various parts of this proposal require code to unambiguously refer to a
+    customization point function, such as when declaring an override. This is
+    much simpler with objects in C++ than with functions, since you cannot
+    declare multiple objects with the same name in a single namespace (unlike
+    with normal functions).
+
+"Pure Virtual" Customization Point Functions in Detail {#CPF-pure-virtual}
+--------------------------------------------------------------------------
 
 Similar to <code>virtual</code> functions, a customization point function may be
 declared pure virtual (although in contrast, a pure virtual customization point
@@ -307,8 +341,23 @@ that are passed, then overload resolution fails.
 
 <pre highlight="c++">
   template&lt; class T &gt;
-  virtual void draw( context& cont, T const&amp; obj ) = 0;
+  virtual void draw( context&amp; cont, T const&amp; obj ) = 0;
 </pre>
+
+This is different from a declaration without a definition. If a user were to
+declare the function without <code>= 0</code>, then attempting to call
+<code>draw</code> with something that did not have a corresponding override
+would match and produce a linker error. An <code>= 0</code> is closer to the
+semantics of <code>= delete</code> (and may end up being the prefered syntax).
+
+Notably, with the above example, a user can easily make a <code>Drawable</code>
+concept:
+
+<pre highlight="c++">
+  template&lt; class T &gt;
+  concept Drawable = requires(context&amp; cont, T&amp t) { ::draw(cont, t); };
+</pre>
+
 
 Final Customization Point Functions {#CPF-final}
 ------------------------------------------------
@@ -395,15 +444,43 @@ A named customization point function override that is intended to be
 <code>final</code> must use the keyword <code>final</code> instead of
 <code>override</code> in its declaration.
 
+Overrides as Friend Functions {#CPF-friend}
+-------------------------------------------
+
+In order to limit the amount of overrides that are looked up per call to a
+customization point, a customization point function may be overridden in the
+body of a class definition as a friend function definition. This capability
+affects lookup of overrides in manner that is similar to lookup of functions
+in associated classes when performing ADL, except that the set of associated
+classes that are considered when performing lookup in order to discover an
+override is intentionally a smaller subset. The motivation for minimizing the
+set of associated classes to be considered is to avoid the instantiation of
+types that may be unable to be completed at the point that the function is
+invoked.
+
+If an argument to a call to a customization point function is a class type
+(including unions), the associated classes in which to discover overrides are:
+the class itself; the class of which it is a member, if any; and its direct and
+indirect base classes.
+
+Otherwise, if an argument to a customization point function is an enumeration,
+the associated classes in which to discover overrides are: the class of which it
+is a member, if any.
+
+Otherwise, there are no associated classes in which to discover overrides.
+
+Customization Point Function Operators {#CPF-operators}
+-------------------------------------------------------
+
+Customization point functions that are declared as operators are not currently
+proposed as a part of this paper and should be ill-formed.
+
 Suggested Polls {#Polls}
 ========================
 
 Should this proposal be elaborated on in a future revision?
 
 Are the motivating problems worth solving at the language level at all?
-
-Should customization point functions be able to be overloaded (ditch the
-interpretation as a function object, but keeping ADL rules)?
 
 Is the functionality of <code>final</code> non-member functions worth proposing
 separately?
